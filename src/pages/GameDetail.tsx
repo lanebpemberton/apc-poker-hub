@@ -167,9 +167,9 @@ const GameDetail = () => {
         </Card>
       </div>
 
-      {/* Bottom Buttons */}
+      {/* Bottom Buttons - Fixed bar with solid background */}
       {(isToday || isTDForGame) && (
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur-md border-t border-border">
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-background border-t border-border z-50">
           <div className="flex gap-3">
             {isTDForGame && (
               <Button
