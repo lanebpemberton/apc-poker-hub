@@ -1,4 +1,5 @@
-import { Clock, MapPin, Trophy, Users } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Clock, MapPin, Users } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import type { PokerGame } from '@/data/mockData';
 
@@ -7,8 +8,13 @@ interface GameCardProps {
 }
 
 export const GameCard = ({ game }: GameCardProps) => {
+  const navigate = useNavigate();
+
   return (
-    <Card className="overflow-hidden hover:bg-secondary/50 transition-colors cursor-pointer">
+    <Card 
+      className="overflow-hidden hover:bg-secondary/50 transition-colors cursor-pointer"
+      onClick={() => navigate(`/game/${game.id}`)}
+    >
       <CardContent className="p-0">
         <div className="flex gap-4 p-4">
           {/* Venue Image */}
