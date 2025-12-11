@@ -118,7 +118,7 @@ export const SignInDialog = ({ open, onOpenChange, venueName, gameId = '' }: Sig
       <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent className="sm:max-w-md bg-card border-border">
           <DialogHeader>
-            <DialogTitle className="text-xl text-center">Sign In Complete</DialogTitle>
+            <DialogTitle className="text-xl text-center">Sign In Pending</DialogTitle>
             <DialogDescription className="text-muted-foreground text-center">
               Show this QR code to the tournament director
             </DialogDescription>
