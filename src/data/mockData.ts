@@ -45,6 +45,25 @@ export interface UserProfile {
   totalWinnings: string;
   currentRank: number;
   seasonPoints: number;
+  role: 'player' | 'td' | 'admin';
+  assignedGames: string[]; // game IDs for TDs
+}
+
+export interface SignedInPlayer {
+  id: string;
+  name: string;
+  avatar: string;
+  gameId: string;
+  venueName: string;
+  foodDrinkAmount: number;
+  foodDrinkChips: number;
+  isVIP: boolean;
+  vipChips: number;
+  isDealer: boolean;
+  dealerChips: number;
+  totalChips: number;
+  timestamp: string;
+  status: 'pending' | 'approved' | 'removed';
 }
 
 // Mock Games by Day
@@ -297,4 +316,42 @@ export const userProfile: UserProfile = {
   totalWinnings: '$1,250',
   currentRank: 10,
   seasonPoints: 1680,
+  role: 'td',
+  assignedGames: ['7', '8', '12'], // Marlow's Tavern (Thu 7pm), Stats Brewpub (Thu 8:30pm), The Fred (Sat 5pm)
 };
+
+// Mock signed-in players for TD view
+export const mockSignedInPlayers: SignedInPlayer[] = [
+  {
+    id: 'p1',
+    name: 'Mike T.',
+    avatar: 'https://i.pravatar.cc/150?img=1',
+    gameId: '7',
+    venueName: "Marlow's Tavern",
+    foodDrinkAmount: 20,
+    foodDrinkChips: 2000,
+    isVIP: true,
+    vipChips: 1500,
+    isDealer: false,
+    dealerChips: 0,
+    totalChips: 3500,
+    timestamp: new Date().toISOString(),
+    status: 'approved',
+  },
+  {
+    id: 'p2',
+    name: 'Sarah K.',
+    avatar: 'https://i.pravatar.cc/150?img=5',
+    gameId: '7',
+    venueName: "Marlow's Tavern",
+    foodDrinkAmount: 15,
+    foodDrinkChips: 1500,
+    isVIP: true,
+    vipChips: 1500,
+    isDealer: true,
+    dealerChips: 1500,
+    totalChips: 4500,
+    timestamp: new Date().toISOString(),
+    status: 'approved',
+  },
+];
