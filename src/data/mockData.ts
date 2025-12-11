@@ -317,7 +317,7 @@ export const userProfile: UserProfile = {
   currentRank: 10,
   seasonPoints: 1680,
   role: 'td',
-  assignedGames: ['7', '8', '12'], // Marlow's Tavern (Thu 7pm), Stats Brewpub (Thu 8:30pm), The Fred (Sat 5pm)
+  assignedGames: ['7', '12'], // Marlow's Tavern (Thu 7pm), Stats Brewpub (Thu 8:30pm), The Fred (Sat 5pm)
 };
 
 // Mock signed-in players for TD view
