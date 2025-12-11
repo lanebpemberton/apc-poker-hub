@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Camera, QrCode, AlertCircle } from 'lucide-react';
+import { Camera, QrCode, AlertCircle, CameraOff } from 'lucide-react';
 import { type SignedInPlayer } from '@/data/mockData';
 import { useToast } from '@/hooks/use-toast';
+import { Html5Qrcode } from 'html5-qrcode';
 
 interface QRScannerDialogProps {
   open: boolean;
@@ -16,41 +17,111 @@ export const QRScannerDialog = ({ open, onOpenChange, onScanned }: QRScannerDial
   const [manualInput, setManualInput] = useState('');
   const [showManual, setShowManual] = useState(false);
   const [error, setError] = useState('');
+  const [isScanning, setIsScanning] = useState(false);
+  const [cameraError, setCameraError] = useState('');
+  const scannerRef = useRef<Html5Qrcode | null>(null);
   const { toast } = useToast();
 
-  const handleParseQR = () => {
+  // Cleanup scanner on unmount or dialog close
+  useEffect(() => {
+    return () => {
+      if (scannerRef.current) {
+        scannerRef.current.stop().catch(() => {});
+      }
+    };
+  }, []);
+
+  // Stop scanner when dialog closes
+  useEffect(() => {
+    if (!open && scannerRef.current) {
+      scannerRef.current.stop().catch(() => {});
+      setIsScanning(false);
+      setCameraError('');
+    }
+  }, [open]);
+
+  const startScanner = async () => {
+    setCameraError('');
+    setError('');
+    
+    try {
+      const scanner = new Html5Qrcode('qr-reader');
+      scannerRef.current = scanner;
+      
+      await scanner.start(
+        { facingMode: 'environment' },
+        {
+          fps: 10,
+          qrbox: { width: 250, height: 250 },
+        },
+        (decodedText) => {
+          // QR code detected
+          handleQRData(decodedText);
+          scanner.stop().catch(() => {});
+          setIsScanning(false);
+        },
+        () => {
+          // QR code scanning in progress (ignore errors during scanning)
+        }
+      );
+      
+      setIsScanning(true);
+    } catch (err) {
+      console.error('Camera error:', err);
+      setCameraError('Unable to access camera. Please check permissions or use manual input.');
+      setIsScanning(false);
+    }
+  };
+
+  const stopScanner = async () => {
+    if (scannerRef.current) {
+      await scannerRef.current.stop().catch(() => {});
+      setIsScanning(false);
+    }
+  };
+
+  const handleQRData = (data: string) => {
     setError('');
     try {
-      const data = JSON.parse(manualInput);
+      const parsed = JSON.parse(data);
       
-      // Validate required fields
-      if (!data.gameId || data.totalChips === undefined) {
+      if (!parsed.gameId || parsed.totalChips === undefined) {
         throw new Error('Invalid QR data: missing required fields');
       }
 
-      // Create player object from QR data
       const player: SignedInPlayer = {
         id: `scanned-${Date.now()}`,
-        name: data.playerName || 'Guest Player',
+        name: parsed.playerName || 'Guest Player',
         avatar: `https://i.pravatar.cc/150?img=${Math.floor(Math.random() * 70)}`,
-        gameId: data.gameId,
-        venueName: data.venueName || '',
-        foodDrinkAmount: data.foodDrinkAmount || 0,
-        foodDrinkChips: data.foodDrinkChips || 0,
-        isVIP: data.isVIP || false,
-        vipChips: data.vipChips || 0,
-        isDealer: data.isDealer || false,
-        dealerChips: data.dealerChips || 0,
-        totalChips: data.totalChips || 0,
-        timestamp: data.timestamp || new Date().toISOString(),
+        gameId: parsed.gameId,
+        venueName: parsed.venueName || '',
+        foodDrinkAmount: parsed.foodDrinkAmount || 0,
+        foodDrinkChips: parsed.foodDrinkChips || 0,
+        isVIP: parsed.isVIP || false,
+        vipChips: parsed.vipChips || 0,
+        isDealer: parsed.isDealer || false,
+        dealerChips: parsed.dealerChips || 0,
+        totalChips: parsed.totalChips || 0,
+        timestamp: parsed.timestamp || new Date().toISOString(),
         status: 'pending',
       };
 
+      toast({
+        title: 'QR Code Scanned',
+        description: 'Player data loaded successfully.',
+      });
+
       onScanned(player);
-      setManualInput('');
-      setShowManual(false);
     } catch (e) {
       setError('Invalid QR code data. Please try again.');
+    }
+  };
+
+  const handleParseQR = () => {
+    handleQRData(manualInput);
+    if (!error) {
+      setManualInput('');
+      setShowManual(false);
     }
   };
 
@@ -97,16 +168,45 @@ export const QRScannerDialog = ({ open, onOpenChange, onScanned }: QRScannerDial
         <div className="space-y-4">
           {!showManual ? (
             <>
-              {/* Camera View Placeholder */}
-              <div className="aspect-square bg-secondary rounded-lg flex flex-col items-center justify-center gap-3 border-2 border-dashed border-muted-foreground/30">
-                <Camera className="w-12 h-12 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground text-center px-4">
-                  Camera scanner will be available in the native app.
-                </p>
+              {/* Camera View */}
+              <div className="aspect-square bg-secondary rounded-lg flex flex-col items-center justify-center gap-3 border-2 border-dashed border-muted-foreground/30 overflow-hidden relative">
+                <div id="qr-reader" className={`w-full h-full ${isScanning ? 'block' : 'hidden'}`} />
+                
+                {!isScanning && (
+                  <div className="flex flex-col items-center gap-3 p-4">
+                    {cameraError ? (
+                      <>
+                        <CameraOff className="w-12 h-12 text-muted-foreground" />
+                        <p className="text-sm text-destructive text-center px-4">
+                          {cameraError}
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <Camera className="w-12 h-12 text-muted-foreground" />
+                        <p className="text-sm text-muted-foreground text-center px-4">
+                          Tap "Start Camera" to scan a QR code
+                        </p>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
 
+              {/* Camera Control Buttons */}
+              {!isScanning ? (
+                <Button onClick={startScanner} className="w-full">
+                  <Camera className="w-4 h-4 mr-2" />
+                  Start Camera
+                </Button>
+              ) : (
+                <Button onClick={stopScanner} variant="outline" className="w-full">
+                  Stop Camera
+                </Button>
+              )}
+
               {/* Simulate Scan Button (for testing) */}
-              <Button onClick={handleSimulateScan} className="w-full">
+              <Button onClick={handleSimulateScan} variant="secondary" className="w-full">
                 Simulate QR Scan (Demo)
               </Button>
 
