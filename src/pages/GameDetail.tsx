@@ -1,10 +1,10 @@
 import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Clock, MapPin, Trophy, Users, Calendar, Navigation } from 'lucide-react';
+import { ArrowLeft, Clock, MapPin, Trophy, Users, Calendar, Navigation, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { SignInDialog } from '@/components/SignInDialog';
-import { gamesByDay, type PokerGame } from '@/data/mockData';
+import { gamesByDay, userProfile, type PokerGame } from '@/data/mockData';
 
 // Get venue description from mock data
 const venueDescriptions: Record<string, string> = {
@@ -48,6 +48,11 @@ const GameDetail = () => {
     const today = days[new Date().getDay()];
     return game.day === today;
   }, [game]);
+
+  // Check if current user is TD for this game
+  const isTDForGame = useMemo(() => {
+    return userProfile.role === 'td' && userProfile.assignedGames.includes(gameId || '');
+  }, [gameId]);
 
   if (!game) {
     return (
@@ -162,15 +167,29 @@ const GameDetail = () => {
         </Card>
       </div>
 
-      {/* Bottom Sign In Button (only for today's games) */}
-      {isToday && (
+      {/* Bottom Buttons */}
+      {(isToday || isTDForGame) && (
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur-md border-t border-border">
-          <Button
-            onClick={() => setSignInDialogOpen(true)}
-            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-6 text-lg"
-          >
-            Sign In to Game
-          </Button>
+          <div className="flex gap-3">
+            {isTDForGame && (
+              <Button
+                onClick={() => navigate(`/game/${gameId}/manage`)}
+                variant="outline"
+                className="flex-1 py-6 text-lg border-primary text-primary hover:bg-primary/10"
+              >
+                <Settings className="w-5 h-5 mr-2" />
+                Manage Game
+              </Button>
+            )}
+            {isToday && (
+              <Button
+                onClick={() => setSignInDialogOpen(true)}
+                className={`${isTDForGame ? 'flex-1' : 'w-full'} bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-6 text-lg`}
+              >
+                Sign In to Game
+              </Button>
+            )}
+          </div>
         </div>
       )}
 
