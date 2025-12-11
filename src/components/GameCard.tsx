@@ -33,7 +33,7 @@ export const GameCard = ({ game }: GameCardProps) => {
                 <h3 className="font-semibold text-foreground truncate">{game.venueName}</h3>
                 <p className="text-sm text-muted-foreground truncate">{game.gameType}</p>
               </div>
-              <div className="flex-shrink-0 bg-accent/20 text-accent px-2 py-1 rounded-md">
+              <div className="flex-shrink-0 bg-emerald-500/20 text-emerald-400 px-2 py-1 rounded-md">
                 <span className="text-sm font-bold">{game.prizeAmount}</span>
               </div>
             </div>

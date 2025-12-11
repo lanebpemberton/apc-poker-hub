@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Clock, MapPin, Trophy, Users, Calendar } from 'lucide-react';
+import { ArrowLeft, Clock, MapPin, Trophy, Users, Calendar, Navigation } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { SignInDialog } from '@/components/SignInDialog';
@@ -92,7 +92,7 @@ const GameDetail = () => {
                 <h1 className="text-2xl font-bold text-foreground">{game.venueName}</h1>
                 <p className="text-muted-foreground mt-1">{game.gameType}</p>
               </div>
-              <div className="bg-accent/20 text-accent px-3 py-1.5 rounded-lg">
+              <div className="bg-emerald-500/20 text-emerald-400 px-3 py-1.5 rounded-lg">
                 <span className="text-lg font-bold">{game.prizeAmount}</span>
               </div>
             </div>
@@ -117,6 +117,24 @@ const GameDetail = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Directions Button */}
+        <Button
+          variant="outline"
+          className="w-full mt-4"
+          onClick={() => {
+            const address = encodeURIComponent(`${game.venueName}, ${game.location}`);
+            // Try to detect iOS for Apple Maps, otherwise use Google Maps
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            const mapsUrl = isIOS 
+              ? `maps://maps.apple.com/?q=${address}`
+              : `https://www.google.com/maps/search/?api=1&query=${address}`;
+            window.open(mapsUrl, '_blank');
+          }}
+        >
+          <Navigation className="w-4 h-4 mr-2" />
+          Get Directions
+        </Button>
 
         {/* Description */}
         <div className="mt-6">
@@ -161,6 +179,7 @@ const GameDetail = () => {
         open={signInDialogOpen}
         onOpenChange={setSignInDialogOpen}
         venueName={game.venueName}
+        gameId={game.id}
       />
     </div>
   );
