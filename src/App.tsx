@@ -15,7 +15,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
+      <BrowserRouter basename="/apc-poker-hub">
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/game/:gameId" element={<GameDetail />} />
