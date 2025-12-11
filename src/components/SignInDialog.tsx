@@ -17,17 +17,34 @@ import {
 } from '@/components/ui/tooltip';
 import { HelpCircle, Minus, Plus, Coins } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { QRCodeSVG } from 'qrcode.react';
 
 interface SignInDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   venueName: string;
+  gameId?: string;
 }
 
-export const SignInDialog = ({ open, onOpenChange, venueName }: SignInDialogProps) => {
+interface SignInData {
+  gameId: string;
+  venueName: string;
+  foodDrinkAmount: number;
+  foodDrinkChips: number;
+  isVIP: boolean;
+  vipChips: number;
+  isDealer: boolean;
+  dealerChips: number;
+  totalChips: number;
+  timestamp: string;
+}
+
+export const SignInDialog = ({ open, onOpenChange, venueName, gameId = '' }: SignInDialogProps) => {
   const [foodDrinkAmount, setFoodDrinkAmount] = useState(0);
   const [isVIP, setIsVIP] = useState(false);
   const [isDealer, setIsDealer] = useState(false);
+  const [showQRCode, setShowQRCode] = useState(false);
+  const [qrData, setQRData] = useState<string>('');
 
   const foodDrinkChips = foodDrinkAmount * 100;
   const vipChips = isVIP ? 1500 : 0;
@@ -66,19 +83,74 @@ export const SignInDialog = ({ open, onOpenChange, venueName }: SignInDialogProp
   };
 
   const handleCompleteSignIn = () => {
-    toast({
-      title: "Signed In Successfully!",
-      description: `You've signed in to ${venueName} with ${totalChips.toLocaleString()} bonus chips.`,
-    });
-    onOpenChange(false);
-    // Reset form
-    setFoodDrinkAmount(0);
-    setIsVIP(false);
-    setIsDealer(false);
+    const signInData: SignInData = {
+      gameId,
+      venueName,
+      foodDrinkAmount,
+      foodDrinkChips,
+      isVIP,
+      vipChips,
+      isDealer,
+      dealerChips,
+      totalChips,
+      timestamp: new Date().toISOString(),
+    };
+    
+    const jsonString = JSON.stringify(signInData);
+    setQRData(jsonString);
+    setShowQRCode(true);
   };
 
+  const handleClose = (openState: boolean) => {
+    if (!openState) {
+      // Reset form when closing
+      setFoodDrinkAmount(0);
+      setIsVIP(false);
+      setIsDealer(false);
+      setShowQRCode(false);
+      setQRData('');
+    }
+    onOpenChange(openState);
+  };
+
+  if (showQRCode) {
+    return (
+      <Dialog open={open} onOpenChange={handleClose}>
+        <DialogContent className="sm:max-w-md bg-card border-border">
+          <DialogHeader>
+            <DialogTitle className="text-xl text-center">Sign In Complete</DialogTitle>
+            <DialogDescription className="text-muted-foreground text-center">
+              Show this QR code to the tournament director
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex flex-col items-center py-8">
+            <div className="bg-white p-4 rounded-xl">
+              <QRCodeSVG 
+                value={qrData} 
+                size={200}
+                level="M"
+              />
+            </div>
+            <p className="mt-4 text-sm text-muted-foreground text-center">
+              {venueName} • {totalChips.toLocaleString()} bonus chips
+            </p>
+          </div>
+
+          <Button 
+            onClick={() => handleClose(false)}
+            variant="outline"
+            className="w-full"
+          >
+            Done
+          </Button>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md bg-card border-border">
         <DialogHeader>
           <DialogTitle className="text-xl">Game Sign In</DialogTitle>
@@ -107,7 +179,7 @@ export const SignInDialog = ({ open, onOpenChange, venueName }: SignInDialogProp
               </Tooltip>
             </div>
             
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
               <div className="flex items-center gap-2 flex-1">
                 <Button
                   type="button"
@@ -141,6 +213,16 @@ export const SignInDialog = ({ open, onOpenChange, venueName }: SignInDialogProp
                   disabled={foodDrinkAmount >= 30}
                 >
                   <Plus className="h-4 w-4" />
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="shrink-0 px-3"
+                  onClick={() => handleFoodDrinkChange(30)}
+                  disabled={foodDrinkAmount >= 30}
+                >
+                  Max
                 </Button>
               </div>
               
